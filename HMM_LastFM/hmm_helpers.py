@@ -1,29 +1,25 @@
 import numpy as np
 import pandas as pd
+from hmmlearn import hmm
 
-class AugmentedModel(object):
+class AugmentedModel(hmm.MultinomialHMM):
     """
     A class to keep everything organized.
     Useful if you're trying different hyperparameters.
     analysis.py just calls the functions
-    one by one since it's an example and easier to follow.
+    one by one since it's an example
     """
 
-    def __init__(self, model, id_lookup, steal_attributes = False):
-
-        self.model = model
+    def __init__(self, n_components, id_lookup):
+        super(AugmentedModel, self).__init__(n_components)
         self.id_lookup = id_lookup
 
-        #If you want to be able to reference the attributes of model
-        #directly. Generally inadvisable.
-
-        if steal_attributes:
-            for attribute in model.__dict__:
-                self.__dict__[attribute] = model.__dict__[attribute]
-
-        self.steady_state = steady_state(self.model)
-        self.e_probs = process_eprobs(self.model.emissionprob_, self.id_lookup)
-        self.cond_probs = build_cond_prob_df(self.e_probs)
+    def fit(self, data):
+        self.data = data
+        super(AugmentedModel, self).fit(data)
+        self.steady_state = steady_state(self)
+        self.e_probs_df = process_eprobs(self.emissionprob_, self.id_lookup)
+        self.cond_probs = build_cond_prob_df(self.e_probs_df, self.steady_state)
 
     def id_lookup(id):
         return self.id_lookup[id]

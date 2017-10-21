@@ -11,7 +11,8 @@ data, id_lookup, play_counts = load_data("adeveau9_lastfm_10_20_2017.csv")
 model = hmm.MultinomialHMM(n_components=8)
 
 #Fit the model and save a serialized version
-model.fit(data['track_id'].values.reshape(-1, 1))
+X = data['track_id'].values.reshape(-1, 1)
+model.fit(X)
 joblib.dump(model, "trained_model.pkl")
 
 #Determine the steady state of our model
@@ -33,4 +34,4 @@ top_cond_probs = helpers.top_k(cond_probs, k = 5)
 #Make some plots. They're embedded in the post, so
 #we'll want to get the script and <div> tag used by bokeh
 script_bars, div_bars = hmm_plot.plot_bars(play_counts)
-script_states, div_stats = hmm_plot.plot_most_likely_state(model, X, )
+script_states, div_stats = hmm_plot.plot_most_likely_state(model, X, data['Timestamp'])
