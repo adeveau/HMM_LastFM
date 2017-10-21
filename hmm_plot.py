@@ -19,7 +19,6 @@ def plot_bars(cts):
     p.yaxis.axis_label = "# of Plays"
     p.vbar(x = cts['Track'].values, top = cts['ct'].values, width = .9)
 
-    show(p)
     #Return a script and a <div> tag for embedding
     return components(p)
 
@@ -54,6 +53,5 @@ def plot_most_likely_state(model, X, timestamps):
                  fill_color=Category20[model.n_components][x],
                  fill_alpha=.6, line_color=None, legend=str(x))
 
-    show(p)
     #Return a script and a <div> tag for embedding
     return components(p)
