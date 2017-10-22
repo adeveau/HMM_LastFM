@@ -21,14 +21,14 @@ class AugmentedModel(hmm.MultinomialHMM):
         self.e_probs_df = process_eprobs(self.emissionprob_, self.id_lookup)
         self.cond_probs = build_cond_prob_df(self.e_probs_df, self.steady_state)
 
-    def id_lookup(id):
-        return self.id_lookup[id]
+    def id_lookup(track_id):
+        return tuple(self.id_lookup[track_id])
 
     def top_e_probs(self, k):
-        return top_k(self.e_probs, k)
+        return top_k(self.e_probs_df, k)
 
     def bottom_e_probs(self, k):
-        return bottom_k(self.e_probs, k)
+        return bottom_k(self.e_probs_df, k)
 
     def top_cond_probs(self, k):
         return top_k(self.cond_probs, k)
@@ -36,13 +36,12 @@ class AugmentedModel(hmm.MultinomialHMM):
     def bottom_cond_probs(self, k):
         return bottom_k(self.cond_probs, k)
 
-
 def process_eprobs(emission_probs, id_lookup):
     """
     Turn the ids back into track names
     and make a DataFrame
     """
-    return pd.DataFrame(emission_probs.T, index=id_lookup)
+    return pd.DataFrame(emission_probs.T, index= pd.MultiIndex.from_arrays(id_lookup.T))
 
 
 def calc_conditional_prob(song, state, emission_probs, steady_state):
@@ -94,8 +93,8 @@ def top_k(df, k = 5):
         cur_col = df[col]
 
         #Quickselect. A bit faster than using a heap
-        top_indices = np.argpartition(cur_col,-k)[-k:]
-        top_k_col = cur_col.iloc[top_indices].sort_values(ascending = False).index
+        top_indices = np.argpartition(cur_col.values,-k)[-k:]
+        top_k_col = cur_col.iloc[top_indices].sort_values(ascending = False).index.values
         top_k.append(top_k_col)
 
     return pd.DataFrame(np.array(top_k).T)
@@ -109,8 +108,8 @@ def bottom_k(df, k = 5):
     bottom_k = []
     for col in df.columns:
         #Quickselect. A bit faster than using a heap
-        bottom_indices = np.argpartition(df[col],k)[:k]
-        bottom_k_col = df[col].iloc[bottom_indices].sort_values(ascending = True).index
+        bottom_indices = np.argpartition(df[col].values,k)[:k]
+        bottom_k_col = df[col].iloc[bottom_indices].sort_values(ascending = True).index.values
         bottom_k.append(bottom_k_col)
 
     return pd.DataFrame(np.array(bottom_k).T)

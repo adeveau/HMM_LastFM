@@ -2,37 +2,64 @@ import pandas as pd
 import numpy as np
 
 
-def load_data(path, artist=None, ct_cutoff=10):
+def load_dirty_data(in_path, ct_cutoff=10, out_path = None):
     """
-    Load in the data and do some preprocessing
+    Load in the data and do some cleaning
+    Specify out_path to save the data to a csv file
     """
 
-    df = pd.read_csv(path, header=None)[::-1]
+    df = pd.read_csv(in_path, header=None, dtype = str)
     df.columns = ['Artist', 'Album', 'Track', 'Timestamp']
 
-    if artist is not None:
-        df = df[df['Artist' == artist]]
+    #Lower case since the data is a bit messy
+    df[['Artist', 'Track']] = df[['Artist', 'Track']].apply(lambda r: [x.lower() for x in r])
 
     # Parse the timestamps
     df['Timestamp'] = df['Timestamp'].apply(pd.to_datetime)
     df = df[df.Timestamp != pd.Timestamp('1970-01-01')]
     df = df.dropna(subset=['Timestamp'])
 
+    df = df.sort_values('Timestamp')
     # Filter out tracks with too few plays
-    cts = df['Track'].value_counts().reset_index()
-    cts.columns = ['Track', 'ct']
+    #Group by both Artist and Track since there
+    #are different tracks with the same name
+    artist_track_grpby = df.groupby(['Artist', 'Track'], as_index = False, sort = False)
+    cts = artist_track_grpby.size().reset_index()
+    cts.columns = ['Artist', 'Track', 'ct']
     cts = cts[cts['ct'] > ct_cutoff]
-    df = df[df['Track'].isin(cts['Track'])]
+
+    #Merge the counts in and drop tracks with too
+    #few plays
+    df = pd.merge(df, cts, on=['Artist', 'Track'], how = 'left').dropna(subset = ['ct'])
 
     # Give each track an id number
-    ids = {}
-    id_lookup = []
-    for i, track in enumerate(df['Track'].unique()):
-        ids[track] = i
-        id_lookup.append(track)
+    ids = df.groupby(['Artist', 'Track'], as_index = False, sort = False).first()
+    ids['track_id'] = range(len(ids))
+    ids = ids[['Artist', 'Track', 'track_id']]
+    df  = pd.merge(df, ids, on = ['Artist', 'Track'], how = 'left')
 
-    df['track_id'] = df['Track'].apply(lambda x: ids[x])
-    df.sort_values('Timestamp')
-    #df['TimeToNextPlay'] = df['Timestamp'].shift(-1) - df['Timestamp']
+    #So we can figure out which id corresponds to which track
+    id_lookup = ids[['Artist', 'Track']].values
+
+    if out_path is not None:
+        df.to_csv(out_path, index = False)
+
+    return df, id_lookup, cts
+
+
+def load_clean_data(path):
+    """
+    If the data has already been cleaned, we
+    just need to reconstruct id_lookup and cts
+    """
+
+    df = pd.read_csv(path, dtype = {'ct':int, 'track_id':int})
+    df['Timestamp'] = df['Timestamp'].apply(pd.to_datetime)
+
+
+    unique_tracks = df.groupby(['Artist', 'Track'], as_index = False).first()
+
+    cts = unique_tracks[['Artist', 'Track', 'ct']]
+    id_lookup = unique_tracks.sort_values('track_id')[['Artist', 'Track']].values
 
     return df, id_lookup, cts
