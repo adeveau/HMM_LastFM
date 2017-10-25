@@ -14,7 +14,6 @@ class AugmentedModel(hmm.MultinomialHMM):
         self.id_lookup = id_lookup
 
     def fit(self, data):
-        self.data = data
         super(AugmentedModel, self).fit(data)
 
         #Construct our extra things

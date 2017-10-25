@@ -6,7 +6,7 @@ from hmmlearn import hmm
 from hmm_helpers import AugmentedModel
 from sklearn.externals import joblib
 
-#Load our data and set the hyperparameters of the model
+#Load our data and set the number of hidden states in the model
 data, id_lookup, play_counts = load_clean_data("adeveau9_10_20_2017_clean.csv")
 amodel = AugmentedModel(8, id_lookup)
 
@@ -33,4 +33,4 @@ top_cond_probs = amodel.top_cond_probs(5)
 #Make some plots. They're embedded in the post, so
 #we'll want to get the script and <div> tag used by bokeh
 script_bars, div_bars = hmm_plot.plot_bars(play_counts)
-script_states, div_stats = hmm_plot.plot_most_likely_state(amodel, X, data['Timestamp'])
+script_states, div_states = hmm_plot.plot_most_likely_state(amodel, X, data['Timestamp'])
