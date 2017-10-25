@@ -5,9 +5,8 @@ from hmmlearn import hmm
 class AugmentedModel(hmm.MultinomialHMM):
     """
     A class to keep everything organized.
-    Useful if you're trying different hyperparameters.
-    analysis.py just calls the functions
-    one by one since it's an example
+    Parituclarly seful if you're trying different
+    hyperparameters or initial configurations
     """
 
     def __init__(self, n_components, id_lookup):
@@ -17,6 +16,8 @@ class AugmentedModel(hmm.MultinomialHMM):
     def fit(self, data):
         self.data = data
         super(AugmentedModel, self).fit(data)
+
+        #Construct our extra things
         self.steady_state = steady_state(self)
         self.e_probs_df = process_eprobs(self.emissionprob_, self.id_lookup)
         self.cond_probs = build_cond_prob_df(self.e_probs_df, self.steady_state)

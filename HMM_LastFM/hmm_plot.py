@@ -14,10 +14,10 @@ def plot_bars(cts):
     output_file("cts_bar.html", title = "Counts Bar Chart")
 
     #Set up the plot
-    p = figure(x_range = cts['Track'].values)
+    p = figure()
     p.xaxis.visible = False
     p.yaxis.axis_label = "# of Plays"
-    p.vbar(x = cts['Track'].values, top = cts['ct'].values, width = .9)
+    p.vbar(x = range(len(cts)), top = cts['ct'].values, width = .9)
 
     #Return a script and a <div> tag for embedding
     return components(p)
@@ -40,10 +40,7 @@ def plot_most_likely_state(model, X, timestamps):
     output_file("hmm_predictions_chart.html", title="HMM State Predictions")
 
     p = figure(x_axis_type = "datetime")
-    p.legend.location = 'top_left'
-    p.legend.click_policy = 'hide'
-    p.xaxis.axis_label = "Date"
-    p.yaxis.axis_label = "State Probability"
+
 
     #Plot each state in a different color and add it to the legend
     for x in xrange(model.n_components):
@@ -52,6 +49,12 @@ def plot_most_likely_state(model, X, timestamps):
         p.circle(x_coords, y_coords,
                  fill_color=Category20[model.n_components][x],
                  fill_alpha=.6, line_color=None, legend=str(x))
+
+
+    p.legend.location = 'top_left'
+    p.legend.click_policy = 'hide'
+    p.xaxis.axis_label = "Date"
+    p.yaxis.axis_label = "State Probability"
 
     #Return a script and a <div> tag for embedding
     return components(p)
